@@ -425,7 +425,7 @@ task ValidateSamFile {
   Int max_heap = memory_size - 500
 
   command {
-    java -Xms~{java_memory_size}m -Xmx~{max_heap}m -jar /usr/picard/picard.jar \
+    java -Xms~{java_memory_size}m -Xmx~{max_heap}m -jar /usr/picard/picard.jar -mem "${MEM_SIZE} $MEM_UNIT" \
       ValidateSamFile \
       INPUT=~{input_bam} \
       OUTPUT=~{report_filename} \
@@ -441,6 +441,7 @@ task ValidateSamFile {
     preemptible: preemptible_tries
     memory: "~{memory_size} MiB"
     disks: "local-disk " + disk_size + " HDD"
+    maxRetries: 3
   }
   output {
     File report = "~{report_filename}"
@@ -506,7 +507,7 @@ task CollectRawWgsMetrics {
   String java_memory_size = (memory_size - 1) * 1000
 
   command {
-    java -Xms~{java_memory_size}m -jar /usr/picard/picard.jar \
+    java -Xms~{java_memory_size}m -jar /usr/picard/picard.jar -mem "${MEM_SIZE} $MEM_UNIT" \
       CollectRawWgsMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
@@ -522,6 +523,7 @@ task CollectRawWgsMetrics {
     preemptible: preemptible_tries
     memory: "~{memory_size} GiB"
     disks: "local-disk " + disk_size + " HDD"
+    maxRetries: 3
   }
   output {
     File metrics = "~{metrics_filename}"
