@@ -425,7 +425,7 @@ task ValidateSamFile {
   Int max_heap = memory_size - 500
 
   command {
-    java -Xms~{java_memory_size}m -Xmx~{max_heap}m -jar /usr/picard/picard.jar -mem "${MEM_SIZE} $MEM_UNIT" \
+    java -Xms~{java_memory_size}m -Xmx~{max_heap}m -jar /usr/picard/picard.jar -mem "$MEM_SIZE $MEM_UNIT" \
       ValidateSamFile \
       INPUT=~{input_bam} \
       OUTPUT=~{report_filename} \
