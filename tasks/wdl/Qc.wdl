@@ -507,7 +507,7 @@ task CollectRawWgsMetrics {
   String java_memory_size = (memory_size - 1) * 1000
 
   command {
-    java -Xms~{java_memory_size}m -jar /usr/picard/picard.jar -mem "${MEM_SIZE} $MEM_UNIT" \
+    java -Xms~{java_memory_size}m -jar /usr/picard/picard.jar -mem "$MEM_SIZE $MEM_UNIT" \
       CollectRawWgsMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
