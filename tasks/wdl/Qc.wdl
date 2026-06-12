@@ -420,12 +420,41 @@ task ValidateSamFile {
                     + size(ref_dict, "GiB")) + additional_disk
   }
 
-  Int memory_size = ceil(16000 * memory_multiplier)
-  Int java_memory_size = memory_size - 1000
-  Int max_heap = memory_size - 500
+  # Int memory_size = ceil(16000 * memory_multiplier)
+  # Int java_memory_size = memory_size - 1000
+  # Int max_heap = memory_size - 500
 
   command {
-    java -Xms~{java_memory_size}m -Xmx~{max_heap}m -jar /usr/picard/picard.jar -mem "$MEM_SIZE $MEM_UNIT" \
+    # Adapted from https://github.com/broadinstitute/warp/issues/481
+    case $MEM_UNIT in
+      TB)
+        memory_exponent=2
+        ;;
+      GB)
+        memory_exponent=1
+        ;;
+      MB)
+        memory_exponent=0
+        ;;
+      KB)
+        memory_exponent=-1
+        ;;
+      B|Bytes)
+        memory_exponent=-2
+        ;;
+      *)
+        echo Error: The MEM_UNIT environment variable has an unexpected value. >&2
+        exit 1
+    esac
+
+    available_memory_mb=$(echo "print(int($MEM_SIZE*(1024**($memory_exponent))))" | python)
+    let java_memory_size_mb=available_memory_mb-1024
+    let max_heap_mb=java_memory_size_mb-500
+    echo "Total available memory: $available_memory_mb MB" >&2
+    echo "Memory reserved for Java: $java_memory_size_mb MB" >&2
+    echo "Max heap size: $max_heap_mb MB" >&2
+
+    java -Xms"$java_memory_size_mb"m -Xmx"$max_heap_mb"m -jar /usr/picard/picard.jar \
       ValidateSamFile \
       INPUT=~{input_bam} \
       OUTPUT=~{report_filename} \
@@ -439,7 +468,7 @@ task ValidateSamFile {
   runtime {
     docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.26.10"
     preemptible: preemptible_tries
-    memory: "~{memory_size} MiB"
+    memory: "16000 MiB"
     disks: "local-disk " + disk_size + " HDD"
     maxRetries: 3
   }
@@ -503,11 +532,38 @@ task CollectRawWgsMetrics {
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
   Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + additional_disk
 
-  Int memory_size = ceil((if (disk_size < 110) then 5 else 7) * memory_multiplier)
-  String java_memory_size = (memory_size - 1) * 1000
+  # Int memory_size = ceil((if (disk_size < 110) then 5 else 7) * memory_multiplier)
+  # String java_memory_size = (memory_size - 1) * 1000
 
   command {
-    java -Xms~{java_memory_size}m -jar /usr/picard/picard.jar -mem "$MEM_SIZE $MEM_UNIT" \
+    # Adapted from https://github.com/broadinstitute/warp/issues/481
+    case $MEM_UNIT in
+      TB)
+        memory_exponent=2
+        ;;
+      GB)
+        memory_exponent=1
+        ;;
+      MB)
+        memory_exponent=0
+        ;;
+      KB)
+        memory_exponent=-1
+        ;;
+      B|Bytes)
+        memory_exponent=-2
+        ;;
+      *)
+        echo Error: The MEM_UNIT environment variable has an unexpected value. >&2
+        exit 1
+    esac
+
+    available_memory_mb=$(echo "print(int($MEM_SIZE*(1024**($memory_exponent))))" | python)
+    let java_memory_size_mb=available_memory_mb-1024
+    echo "Total available memory: $available_memory_mb MB" >&2
+    echo "Memory reserved for Java: $java_memory_size_mb MB" >&2
+    
+    java -Xms"$java_memory_size_mb"m -jar /usr/picard/picard.jar \
       CollectRawWgsMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
@@ -521,7 +577,7 @@ task CollectRawWgsMetrics {
   runtime {
     docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.26.10"
     preemptible: preemptible_tries
-    memory: "~{memory_size} GiB"
+    memory: "6 GiB"
     disks: "local-disk " + disk_size + " HDD"
     maxRetries: 3
   }
