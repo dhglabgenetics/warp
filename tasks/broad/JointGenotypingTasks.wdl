@@ -96,6 +96,10 @@ task ImportGVCFs {
 
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.6.1.0"
   }
+  
+  # Memory settings were set up to match the original ones at the default settings
+  Int java_memory_size = machine_mem_mb - 22000
+  Int max_heap = machine_mem_mb - 5000
 
   command <<<
     set -euo pipefail
@@ -111,7 +115,7 @@ task ImportGVCFs {
     # a significant amount of non-heap memory for native libraries.
     # Also, testing has shown that the multithreaded reader initialization
     # does not scale well beyond 5 threads, so don't increase beyond that.
-    gatk --java-options "-Xms8000m -Xmx25000m" \
+    gatk --java-options "-Xms~{java_memory_size}m -Xmx~{max_heap}m" \
       GenomicsDBImport \
       --genomicsdb-workspace-path ~{workspace_dir_name} \
       --batch-size ~{batch_size} \
