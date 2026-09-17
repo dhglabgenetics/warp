@@ -97,9 +97,10 @@ task ImportGVCFs {
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.6.1.0"
   }
   
-  # Memory settings were set up to match the original ones at the default settings
-  Int java_memory_size = machine_mem_mb - 22000
-  Int max_heap = machine_mem_mb - 5000
+  # Max heap set up to match GATK's suggestion of 80% - 90%
+  # Choosing 80% because --consolidate is turned on
+  Int java_memory_size = ceil(machine_mem_mb * 0.27)
+  Int max_heap = ceil(machine_mem_mb * 0.8)
 
   command <<<
     set -euo pipefail
