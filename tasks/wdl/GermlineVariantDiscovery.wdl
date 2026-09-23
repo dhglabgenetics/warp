@@ -49,6 +49,7 @@ task HaplotypeCaller_GATK35_GVCF {
     /usr/gitc/gatk4/gatk --java-options "-Xms2000m -Xmx9000m"\
       PrintReads \
       -I ~{input_bam} \
+      -R ~{ref_fasta} \
       --interval-padding 500 \
       -L ~{interval_list} \
       -O local.sharded.bam \
