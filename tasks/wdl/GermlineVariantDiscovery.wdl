@@ -50,7 +50,7 @@ task HaplotypeCaller_GATK35_GVCF {
     /usr/gitc/gatk4/gatk --java-options "-Xms2000m -Xmx9000m"\
       PrintReads \
       -I ~{input_bam} \
-      --gcs-project-for-requester-pays project_id \
+      --gcs-project-for-requester-pays ~{project_id} \
       -R ~{ref_fasta} \
       --interval-padding 500 \
       -L ~{interval_list} \
